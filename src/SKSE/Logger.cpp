@@ -148,7 +148,10 @@ namespace SKSE
 			logger->flush_on(spdlog::level::info);
 #	endif
 			spdlog::set_default_logger(std::move(logger));
-			spdlog::set_pattern("[%T.%e] [%=5t] [%L] %v");
+			//spdlog::set_pattern("[%T.%e] [%=5t] [%L] %v");
+			spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$] [%s:%#] %v");
+
+
 #endif
 		}
 	}
