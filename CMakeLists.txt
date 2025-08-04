@@ -72,7 +72,9 @@ target_compile_definitions(
 	"$<$<BOOL:${ENABLE_SKYRIM_SE}>:ENABLE_SKYRIM_SE=1>"
 	"$<$<BOOL:${ENABLE_SKYRIM_AE}>:ENABLE_SKYRIM_AE=1>"
 	"$<$<BOOL:${ENABLE_SKYRIM_VR}>:ENABLE_SKYRIM_VR=1>"
-	HAS_SKYRIM_MULTI_TARGETING=1
+	"$<$<AND:$<BOOL:${ENABLE_SKYRIM_SE}>,$<BOOL:${ENABLE_SKYRIM_AE}>>:HAS_SKYRIM_MULTI_TARGETING=1>"
+	"$<$<AND:$<BOOL:${ENABLE_SKYRIM_SE}>,$<BOOL:${ENABLE_SKYRIM_VR}>>:HAS_SKYRIM_MULTI_TARGETING=1>"
+	"$<$<AND:$<BOOL:${ENABLE_SKYRIM_AE}>,$<BOOL:${ENABLE_SKYRIM_VR}>>:HAS_SKYRIM_MULTI_TARGETING=1>"
 )
 
 target_compile_features(
@@ -115,6 +117,7 @@ if(MSVC)
 endif()
 
 set(OPENVR_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/openvr/headers)
+set(OPENVR_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/openvr/lib/win64)
 target_include_directories(
 	"${PROJECT_NAME}"
 	PUBLIC
@@ -148,6 +151,7 @@ target_link_libraries(
 	DXGI.lib
 	Ole32.lib
 	Version.lib
+	"$<$<BOOL:${ENABLE_SKYRIM_VR}>:${OPENVR_LIB_DIR}/openvr_api.lib>"
 )
 
 target_precompile_headers(

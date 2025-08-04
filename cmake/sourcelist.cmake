@@ -240,6 +240,7 @@ set(SOURCES
 	include/RE/B/BSFaceGenModelExtraData.h
 	include/RE/B/BSFaceGenNiNode.h
 	include/RE/B/BSFadeNode.h
+	include/RE/B/BSFadeNodeCuller.h
 	include/RE/B/BSFile.h
 	include/RE/B/BSFixedString.h
 	include/RE/B/BSFurnitureMarkerNode.h
@@ -435,9 +436,11 @@ set(SOURCES
 	include/RE/B/bhkBackfaceContactListener.h
 	include/RE/B/bhkCachingShapePhantom.h
 	include/RE/B/bhkCharProxyController.h
+	include/RE/B/bhkCharRigidBodyController.h
 	include/RE/B/bhkCharacterController.h
 	include/RE/B/bhkCharacterPointCollector.h
 	include/RE/B/bhkCharacterProxy.h
+	include/RE/B/bhkCharacterRigidBody.h
 	include/RE/B/bhkCharacterState.h
 	include/RE/B/bhkCharacterStateClimbing.h
 	include/RE/B/bhkCharacterStateFlying.h
@@ -949,6 +952,7 @@ set(SOURCES
 	include/RE/H/HeapBlock.h
 	include/RE/H/HeapBlockFreeHead.h
 	include/RE/H/HeldStateHandler.h
+	include/RE/H/HighActorCuller.h
 	include/RE/H/HighProcessData.h
 	include/RE/H/HitData.h
 	include/RE/H/HorseCameraState.h
@@ -1030,6 +1034,8 @@ set(SOURCES
 	include/RE/H/hkpCharacterControl.h
 	include/RE/H/hkpCharacterProxy.h
 	include/RE/H/hkpCharacterProxyListener.h
+	include/RE/H/hkpCharacterRigidBody.h
+	include/RE/H/hkpCharacterRigidBodyListener.h
 	include/RE/H/hkpCharacterState.h
 	include/RE/H/hkpCharacterStateManager.h
 	include/RE/H/hkpClosestRayHitCollector.h
@@ -1050,6 +1056,7 @@ set(SOURCES
 	include/RE/H/hkpContactPointProperties.h
 	include/RE/H/hkpConvexListFilter.h
 	include/RE/H/hkpConvexShape.h
+	include/RE/H/hkpConvexVerticesShape.h
 	include/RE/H/hkpEaseConstraintsAction.h
 	include/RE/H/hkpEntity.h
 	include/RE/H/hkpEntityListener.h
@@ -1258,6 +1265,7 @@ set(SOURCES
 	include/RE/M/Misc.h
 	include/RE/M/MissileProjectile.h
 	include/RE/M/MistMenu.h
+	include/RE/M/MobIterOperator.h
 	include/RE/M/ModManagerMenu.h
 	include/RE/M/ModelReferenceEffect.h
 	include/RE/M/Moon.h
@@ -1401,6 +1409,7 @@ set(SOURCES
 	include/RE/P/Precipitation.h
 	include/RE/P/PrecomputedNavmeshInfoPathMap.h
 	include/RE/P/ProcessLists.h
+	include/RE/P/ProcessType.h
 	include/RE/P/Profiler.h
 	include/RE/P/Projectile.h
 	include/RE/P/PropertyTypeInfo.h
@@ -1487,6 +1496,7 @@ set(SOURCES
 	include/RE/S/SoundLevels.h
 	include/RE/S/SourceActionMap.h
 	include/RE/S/SpawnHazardEffect.h
+	include/RE/S/SpecificItemCollector.h
 	include/RE/S/SpellItem.h
 	include/RE/S/SpellsLearned.h
 	include/RE/S/SprintHandler.h
@@ -1785,6 +1795,7 @@ set(SOURCES
 	src/RE/A/ArmorRatingVisitor.cpp
 	src/RE/A/ArmorRatingVisitorBase.cpp
 	src/RE/A/Array.cpp
+	src/RE/A/AutoVanityState.cpp
 	src/RE/B/BGSAttackData.cpp
 	src/RE/B/BGSBaseAlias.cpp
 	src/RE/B/BGSBipedObjectForm.cpp
@@ -1859,12 +1870,15 @@ set(SOURCES
 	src/RE/B/BSXFlags.cpp
 	src/RE/B/BarterMenu.cpp
 	src/RE/B/BipedAnim.cpp
+	src/RE/B/BleedoutCameraState.cpp
 	src/RE/B/BookMenu.cpp
 	src/RE/B/BooksRead.cpp
 	src/RE/B/bhkCharProxyController.cpp
 	src/RE/B/bhkRigidBody.cpp
+	src/RE/C/CFilter.cpp
 	src/RE/C/Calendar.cpp
 	src/RE/C/ChestsLooted.cpp
+	src/RE/C/CollisionLayers.cpp
 	src/RE/C/Color.cpp
 	src/RE/C/ColorUtil.cpp
 	src/RE/C/CommandTable.cpp
@@ -1876,6 +1890,7 @@ set(SOURCES
 	src/RE/C/ControlMap.cpp
 	src/RE/C/CriticalHit.cpp
 	src/RE/D/DisarmedEvent.cpp
+	src/RE/D/DragonCameraState.cpp
 	src/RE/D/DragonSoulsGained.cpp
 	src/RE/E/Effect.cpp
 	src/RE/E/EffectArchetypes.cpp
@@ -1908,7 +1923,9 @@ set(SOURCES
 	src/RE/E/ExtraTextDisplayData.cpp
 	src/RE/E/ExtraUniqueID.cpp
 	src/RE/F/FindMaxMagnitudeVisitor.cpp
+	src/RE/F/FirstPersonState.cpp
 	src/RE/F/FormTypes.cpp
+	src/RE/F/FurnitureCameraState.cpp
 	src/RE/F/FxDelegate.cpp
 	src/RE/F/FxDelegateArgs.cpp
 	src/RE/G/GAtomic.cpp
@@ -1943,6 +1960,7 @@ set(SOURCES
 	src/RE/H/Hazard.cpp
 	src/RE/H/HeapBlock.cpp
 	src/RE/H/HeldStateHandler.cpp
+	src/RE/H/HorseCameraState.cpp
 	src/RE/H/hkBaseTypes.cpp
 	src/RE/H/hkReferencedObject.cpp
 	src/RE/H/hkStringPtr.cpp
@@ -2042,6 +2060,7 @@ set(SOURCES
 	src/RE/P/PackUnpack.cpp
 	src/RE/P/PackedInstructionStream.cpp
 	src/RE/P/PlayerCamera.cpp
+	src/RE/P/PlayerCameraTransitionState.cpp
 	src/RE/P/PlayerCharacter.cpp
 	src/RE/P/PlayerControls.cpp
 	src/RE/P/PlayerInputHandler.cpp
@@ -2076,6 +2095,7 @@ set(SOURCES
 	src/RE/T/TESActorBase.cpp
 	src/RE/T/TESAmmo.cpp
 	src/RE/T/TESCamera.cpp
+	src/RE/T/TESCameraState.cpp
 	src/RE/T/TESClimate.cpp
 	src/RE/T/TESCondition.cpp
 	src/RE/T/TESContainer.cpp
@@ -2102,7 +2122,9 @@ set(SOURCES
 	src/RE/T/TESTopicInfo.cpp
 	src/RE/T/TESWorldSpace.cpp
 	src/RE/T/TaskQueueInterface.cpp
+	src/RE/T/ThirdPersonState.cpp
 	src/RE/T/ThumbstickEvent.cpp
+	src/RE/T/TweenMenuCameraState.cpp
 	src/RE/T/TypeInfo.cpp
 	src/RE/U/UI.cpp
 	src/RE/U/UI3DSceneManager.cpp
@@ -2110,6 +2132,7 @@ set(SOURCES
 	src/RE/U/UIMessageQueue.cpp
 	src/RE/U/UnlinkedTypes.cpp
 	src/RE/U/UserEvents.cpp
+	src/RE/V/VATSCameraState.cpp
 	src/RE/V/Variable.cpp
 	src/RE/V/VirtualMachine.cpp
 	src/RE/W/WorldSpaceMenu.cpp
