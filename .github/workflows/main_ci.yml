@@ -2,7 +2,7 @@ name: Main CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ng ]
     paths:
       - '.github/workflows/main_ci.yml'
       - 'cmake/**'
@@ -11,14 +11,10 @@ on:
       - 'tests/**'
       - 'CMakeLists.txt'
       - 'CMakePresets.json'
-      - 'conanfile.py'
       - 'vcpkg.json'
   pull_request:
-    branches: [ main, feature/* ]
+    branches: [ vr, ng, feature/* ]
   workflow_dispatch:
-
-env:
-  VCPKG_COMMIT_ID: fc3f61366102c1f0d4547c06d03c523bb18c13a7
 
 jobs:
   build-and-test-vcpkg:
@@ -40,21 +36,30 @@ jobs:
           - clang-cl
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: main
+          submodules: recursive
+
+      - name: Extract vcpkg baseline from vcpkg.json
+        id: get_vcpkg_baseline
+        shell: pwsh
+        run: |
+          $vcpkgJson = Get-Content main/vcpkg.json | ConvertFrom-Json
+          $baseline = $vcpkgJson.'builtin-baseline'
+          echo "baseline=$baseline" >> $env:GITHUB_OUTPUT
+          echo "✓ Using vcpkg baseline from vcpkg.json: $baseline"
 
       - name: Setup MSVC Environment
-        uses: ilammy/msvc-dev-cmd@v1.10.0
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v10.0
+        uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-          doNotCache: true
+          vcpkgGitCommitId: ${{ steps.get_vcpkg_baseline.outputs.baseline }}
 
       - name: Build
-        uses: lukka/run-cmake@v10.0
+        uses: lukka/run-cmake@v10
         with:
           cmakeListsTxtPath: ${{ github.workspace }}/main/CMakeLists.txt
           configurePreset: build-${{ matrix.build-type }}-${{ matrix.compiler }}-vcpkg-${{ matrix.runtime }}
@@ -64,57 +69,3 @@ jobs:
         timeout-minutes: 5
         working-directory: ${{ github.workspace }}/main/build/${{ matrix.build-type }}-${{ matrix.compiler }}-vcpkg-${{ matrix.runtime }}
         run: .\CommonLibSSETests.exe
-  build-and-test-conan:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        build-type:
-          - debug
-          - release
-        runtime:
-          - all
-          - flatrim
-          - ae
-          - se
-          - vr
-        compiler:
-          - msvc
-          - clang-cl
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          path: main
-
-      - name: Setup MSVC Environment
-        uses: ilammy/msvc-dev-cmd@v1.10.0
-
-      - name: Install Conan
-        uses: turtlebrowser/get-conan@main
-
-      - name: Run Conan
-        working-directory: ${{ github.workspace }}/main
-        run: conan install --build=missing -o commonlibsse-ng:testing=True .
-
-      - name: Build with CMake
-        uses: lukka/run-cmake@v10.0
-        with:
-          cmakeListsTxtPath: ${{ github.workspace }}/main/CMakeLists.txt
-          configurePreset: build-${{ matrix.build-type }}-${{ matrix.compiler }}-conan-${{ matrix.runtime }}
-          buildPreset: ${{ matrix.build-type }}-${{ matrix.compiler }}-conan-${{ matrix.runtime }}
-
-      - name: Build with Conan
-        if: matrix.compiler == 'msvc' && matrix.runtime == 'all'
-        working-directory: ${{ github.workspace }}/main
-        run: conan build .
-
-      - name: Unit tests
-        timeout-minutes: 5
-        working-directory: ${{ github.workspace }}/main/build/${{ matrix.build-type }}-${{ matrix.compiler }}-conan-${{ matrix.runtime }}
-        run: .\CommonLibSSETests.exe
-
-      - name: Create Conan Package
-        if: matrix.compiler == 'msvc' && matrix.runtime == 'all'
-        working-directory: ${{ github.workspace }}/main
-        run: conan create .

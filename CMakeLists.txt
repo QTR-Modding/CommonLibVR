@@ -89,6 +89,7 @@ if(MSVC)
 		PUBLIC
 
 		# disable warnings
+		"$<$<CONFIG:Debug>:/wd4702>" # unreachable code: debug builds don't optimize away compile-time conditionals
 		/wd4005 # macro redefinition
 		/wd4061 # enumerator 'identifier' in switch of enum 'enumeration' is not explicitly handled by a case label
 		/wd4068 # unknown pragma
@@ -239,6 +240,10 @@ if(BUILD_TESTS)
 		tests/REL/version-1-4-15-0.csv
 		tests/REL/version-1-5-97-0.bin
 		tests/REL/versionlib-1-6-353-0.bin
+		tests/REL/versionlib-1-6-629-0.bin
+		tests/REL/versionlib-1-6-1130-0.bin
+		tests/REL/versionlib-1-6-1170-0.bin
+		tests/REL/versionlib-1-6-1179-0.bin
 		DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/Data/SKSE/Plugins/"
 	)
 
