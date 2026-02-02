@@ -17,7 +17,9 @@ namespace RE
 			cachedEvent.device = a_device;
 			cachedEvent.SetIDCode(a_id);
 			cachedEvent.SetUserEvent(a_userEvent);
+#ifndef SKYRIM_REL_VR
 			cachedEvent.AsVRWandEvent()->unkVR28 = -1;
+#endif
 			PushOntoInputQueue(&cachedEvent);
 			++buttonEventCount;
 		}
