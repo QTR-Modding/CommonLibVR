@@ -12,15 +12,6 @@ namespace RE
 	ButtonEvent* BSInputEventQueue::GetCachedEvent<ButtonEvent>()
 	{
 		if (buttonEventCount < MAX_BUTTON_EVENTS) {
-			auto& cachedEvent = GetRuntimeData().buttonEvents[buttonEventCount];
-			cachedEvent.GetRuntimeData().value = a_value;
-			cachedEvent.GetRuntimeData().heldDownSecs = a_duration;
-			cachedEvent.device = a_device;
-			cachedEvent.SetIDCode(a_id);
-			cachedEvent.SetUserEvent(a_userEvent);
-			cachedEvent.AsVRWandEvent()->unkVR28 = -1;
-			PushOntoInputQueue(&cachedEvent);
-			++buttonEventCount;
 			return &GetRuntimeData().buttonEvents[buttonEventCount];
 		}
 
