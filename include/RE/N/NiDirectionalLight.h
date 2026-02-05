@@ -3,6 +3,7 @@
 #include "RE/N/NiLight.h"
 
 #include "RE/M/MemoryManager.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
@@ -42,16 +43,7 @@ namespace RE
 			return light;
 		}
 
-		[[nodiscard]] inline DIRECTIONAL_LIGHT_RUNTIME_DATA& GetDirectionalLightRuntimeData() noexcept
-		{
-			return REL::RelocateMember<DIRECTIONAL_LIGHT_RUNTIME_DATA>(this, 0x140, 0x168);
-		}
-
-		[[nodiscard]] inline const DIRECTIONAL_LIGHT_RUNTIME_DATA& GetDirectionalLightRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<DIRECTIONAL_LIGHT_RUNTIME_DATA>(this, 0x140, 0x168);
-		}
-
+		RUNTIME_DATA_ACCESSOR_EX(DIRECTIONAL_LIGHT_RUNTIME_DATA, GetDirectionalLightRuntimeData, 0x140, 0x168);
 		// The model direction of the light is (1,0,0). The world direction is
 		// the first column of the world rotation matrix.
 		inline const NiPoint3& GetWorldDirection() const
@@ -72,12 +64,7 @@ namespace RE
 			static REL::Relocation<func_t> func{ RELOCATION_ID(69692, 71073) };
 			return func(this);
 		}
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(NiDirectionalLight) == 0x158);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(NiDirectionalLight) == 0x180);
-#endif
+	STATIC_ASSERT_SIZE(NiDirectionalLight, 0x158, 0x158, 0x180, 0x110);
 }
 #undef RUNTIME_DATA_CONTENT

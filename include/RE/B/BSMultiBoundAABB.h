@@ -26,7 +26,7 @@ namespace RE
 		float         GetLength() override;                               // 26
 		bool          Unk_27() override;                                  // 27
 		void          Unk_28() override;                                  // 28
-		bool          Unk_29() override;                                  // 29
+		bool          WithinFrustum(NiFrustumPlanes const&) override;     // 29
 		void          Unk_2A() override;                                  // 2A
 		void          Unk_2B() override;                                  // 2B
 		bool          GetWithinPoint(const NiPoint3& a_pos) override;     // 2C
@@ -40,8 +40,6 @@ namespace RE
 		NiPoint3      size;    // 2C
 		std::uint32_t pad38;   // 38
 		std::uint32_t pad3C;   // 3C
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BSMultiBoundAABB) == 0x40);
 }

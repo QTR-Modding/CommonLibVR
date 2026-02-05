@@ -64,11 +64,11 @@ namespace RE
 		~BSWin32GamepadDevice() override;  // 00
 
 		// override (BSPCGamepadDeviceDelegate)
-		void Initialize() override;                           // 01
-		void Process(float a_arg1) override;                  // 02
-		void Release() override;                              // 03 - { return; }
-		void Reset() override;                                // 08 - { std::memset(&unk0D8, 0, 0x50); }
-		void SetRumble(float lValue, float rValue) override;  // 09 - { return; }
+		void Initialize() override;                                          // 01
+		void Poll(float a_timeDelta) override;                               // 02
+		void Shutdown() override;                                            // 03 - { return; }
+		void ClearInputState() override;                                     // 08 - { std::memset(&unk0D8, 0, 0x50); }
+		void SetVibration(float a_largeMotor, float a_smallMotor) override;  // 09 - { return; }
 
 		// Returns the previous ButtonState of the gamepad
 		ButtonState GetPreviousButtonState() const
@@ -101,9 +101,6 @@ namespace RE
 	protected:
 		friend class BSGamepadDeviceHandler;
 		BSWin32GamepadDevice();
-
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BSWin32GamepadDevice) == 0x128);
 }

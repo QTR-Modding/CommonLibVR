@@ -22,7 +22,7 @@ endif()
 project(
 	CommonLibSSE
 	LANGUAGES CXX
-	VERSION 3.6.0
+	VERSION 4.2.0
 )
 
 include(CheckIPOSupported)
@@ -87,6 +87,12 @@ if(MSVC)
 	target_compile_options(
 		"${PROJECT_NAME}"
 		PUBLIC
+
+		# Enhanced debug information for optimized code (includes all type info in PDB for RE/debugging)
+		"$<$<CONFIG:Debug>:/Zo>"
+
+		# Standards conformance
+		/Zc:preprocessor # Enable conforming preprocessor (required for STATIC_ASSERT_SIZE variadic macro)
 
 		# disable warnings
 		"$<$<CONFIG:Debug>:/wd4702>" # unreachable code: debug builds don't optimize away compile-time conditionals
@@ -154,6 +160,15 @@ target_link_libraries(
 	Version.lib
 	"$<$<BOOL:${ENABLE_SKYRIM_VR}>:${OPENVR_LIB_DIR}/openvr_api.lib>"
 )
+
+if(MSVC)
+	target_link_options(
+		"${PROJECT_NAME}"
+		PUBLIC
+		# Generate complete PDB with all type information for reverse engineering
+		"$<$<CONFIG:Debug>:/DEBUG:FULL>"
+	)
+endif()
 
 target_precompile_headers(
 	"${PROJECT_NAME}"
@@ -229,6 +244,15 @@ if(BUILD_TESTS)
 		${PROJECT_NAME}
 		Catch2::Catch2
 	)
+
+	if(MSVC)
+		target_link_options(
+			"${PROJECT_NAME}Tests"
+			PRIVATE
+			# Generate complete PDB with all type information for reverse engineering
+			"$<$<CONFIG:Debug>:/DEBUG:FULL>"
+		)
+	endif()
 
 	target_precompile_headers(
 		"${PROJECT_NAME}Tests"

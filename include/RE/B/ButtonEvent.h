@@ -5,6 +5,7 @@
 #include "RE/I/InputEvent.h"
 #include "RE/M/MemoryManager.h"
 #include "RE/V/VRWandEvent.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
@@ -62,16 +63,7 @@ namespace RE
 #ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT;  // 28, 30
 #endif
-		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x28, 0x30);
-		}
-
-		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x28, 0x30);
-		}
-
+		RUNTIME_DATA_ACCESSOR(RUNTIME_DATA, 0x28, 0x30);
 		[[nodiscard]] VRWandEvent* AsVRWandEvent() noexcept
 		{
 			if SKYRIM_REL_CONSTEXPR (!REL::Module::IsVR()) {
@@ -137,15 +129,42 @@ namespace RE
 			}
 		}
 
-	private:
-		KEEP_FOR_RE()
+		void Init(INPUT_DEVICE a_device, std::int32_t a_id, float a_value, float a_duration)
+		{
+			Init(a_device, a_id, a_value, a_duration, ""sv);
+		}
+
+		void Init(INPUT_DEVICE a_device, std::int32_t a_id, float a_value, float a_duration, const BSFixedString& a_userEvent)
+		{
+			// Write runtime-scoped data using relocation-aware accessors
+			GetRuntimeData().value = a_value;
+			GetRuntimeData().heldDownSecs = a_duration;
+			device = a_device;
+			SetIDCode(static_cast<std::uint32_t>(a_id));
+			SetUserEvent(a_userEvent);
+		}
+
+		// VR-aware overloads: accept the extra VR parameter (e.g., wand index) and set VR-specific data when available.
+		void Init(INPUT_DEVICE a_device, std::int32_t a_vrArg, std::int32_t a_id, float a_value, float a_duration)
+		{
+			Init(a_device, a_id, a_value, a_duration, ""sv);
+			if SKYRIM_REL_CONSTEXPR (REL::Module::IsVR()) {
+				if (auto vr = AsVRWandEvent()) {
+					vr->unkVR28 = a_vrArg;
+				}
+			}
+		}
+
+		void Init(INPUT_DEVICE a_device, std::int32_t a_vrArg, std::int32_t a_id, float a_value, float a_duration, const BSFixedString& a_userEvent)
+		{
+			Init(a_device, a_id, a_value, a_duration, a_userEvent);
+			if SKYRIM_REL_CONSTEXPR (REL::Module::IsVR()) {
+				if (auto vr = AsVRWandEvent()) {
+					vr->unkVR28 = a_vrArg;
+				}
+			}
+		}
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(ButtonEvent) == 0x30);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(ButtonEvent) == 0x38);
-#else
-	static_assert(sizeof(ButtonEvent) == 0x18);
-#endif
+	STATIC_ASSERT_SIZE(ButtonEvent, 0x30, 0x30, 0x38, 0x18);
 }
 #undef RUNTIME_DATA_CONTENT

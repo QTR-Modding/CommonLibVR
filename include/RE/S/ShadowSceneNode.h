@@ -3,12 +3,16 @@
 #include "RE/B/BSAtomic.h"
 #include "RE/B/BSTArray.h"
 #include "RE/N/NiNode.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
+	class BSCullingProcess;
+	class BSCompoundFrustum;
 	class BSLight;
 	class BSFogProperty;
 	class BSLensFlareRenderData;
+	class BSPortal;
 	class BSPortalGraph;
 	class BSShadowLight;
 	class BSShadowDirectionalLight;
@@ -56,7 +60,7 @@ namespace RE
 	mutable BSSpinLock                 objectListLock;        /* 1F8 */                         \
 	BSLight*                           sunLight;              /* 200 */                         \
 	BSLight*                           cloudLight;            /* 208 */                         \
-	BSShadowDirectionalLight*          shadowDirLight;        /* 210 */                         \
+	BSShadowDirectionalLight*          sunShadowDirLight;     /* 210 */                         \
 	std::uint8_t                       sceneGraphIndex;       /* 218 */                         \
 	bool                               disableLightUpdate;    /* 219 */                         \
 	bool                               wireframe;             /* 21A */                         \
@@ -66,7 +70,7 @@ namespace RE
 	BSPortalGraph*                     portalGraph;           /* 228 */                         \
 	BSTArray<BSShadowLight*>           shadowLightsAccum;     /* 230 */                         \
 	std::uint32_t                      firstPersonShadowMask; /* 248 */                         \
-	std::uint32_t                      unk24C;                /* 248 */                         \
+	std::uint32_t                      unk24C;                /* 24C */                         \
 	std::uint64_t                      unk250;                /* 250 */                         \
 	std::uint64_t                      unk258;                /* 258 */                         \
 	std::uint64_t                      unk260;                /* 260 */                         \
@@ -104,19 +108,10 @@ namespace RE
 		const NiRTTI* GetRTTI() const override;  // 02
 #if defined(EXCLUSIVE_SKYRIM_FLAT)
 		// The following are virtual functions past the point where VR compatibility breaks.
-		void OnVisible(NiCullingProcess& a_process) override;  // 34
+		void OnVisible(NiCullingProcess& a_process, std::int32_t a_alphaGroupIndex) override;  // 34
 #endif
 
-		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x128, 0x150);
-		}
-
-		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x128, 0x150);
-		}
-
+		RUNTIME_DATA_ACCESSOR(RUNTIME_DATA, 0x128, 0x150);
 		void AttachObject(RE::NiAVObject* object)
 		{
 			using func_t = decltype(&ShadowSceneNode::AttachObject);
@@ -124,25 +119,20 @@ namespace RE
 			return func(this, object);
 		}
 
-		BSLight* AddLight(NiLight* a_light, const LIGHT_CREATE_PARAMS& a_params);
-		void     AddLight(BSLight* a_light);
-		BSLight* GetLight(NiLight* a_light);
-		BSLight* GetPointLight(NiLight* a_light);
-		BSLight* GetShadowLight(NiLight* a_light);
-		void     RemoveLight(NiLight* a_light);
-		void     RemoveLight(const NiPointer<BSLight>& a_light);
+		BSLight*           AddLight(NiLight* a_light, const LIGHT_CREATE_PARAMS& a_params);
+		void               AddLight(BSLight* a_light);
+		BSLight*           GetLight(NiLight* a_light);
+		BSLight*           GetPointLight(NiLight* a_light);
+		BSLight*           GetShadowLight(NiLight* a_light);
+		void               RemoveLight(NiLight* a_light);
+		void               RemoveLight(const NiPointer<BSLight>& a_light);
+		BSCompoundFrustum* BuildSharedCompoundFrustum(BSCullingProcess* a_cullingProcess, BSPortal* a_portal);
 
 		// members
 #ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT;  // 128, 150
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(ShadowSceneNode) == 0x308);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(ShadowSceneNode) == 0x330);
-#endif
+	STATIC_ASSERT_SIZE(ShadowSceneNode, 0x308, 0x308, 0x330, 0x110);
 }
 #undef RUNTIME_DATA_CONTENT

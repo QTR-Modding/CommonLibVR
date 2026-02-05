@@ -5,9 +5,9 @@
 #include "RE/B/BSContainer.h"
 #include "RE/B/BSMultiBoundNode.h"
 #include "RE/B/BSPointerHandle.h"
+#include "RE/B/BSSimpleList.h"
 #include "RE/B/BSTArray.h"
 #include "RE/B/BSTHashMap.h"
-#include "RE/B/BSTList.h"
 #include "RE/C/Color.h"
 #include "RE/E/ExtraDataList.h"
 #include "RE/F/FormTypes.h"
@@ -17,6 +17,7 @@
 #include "RE/T/TESForm.h"
 #include "RE/T/TESFullName.h"
 #include "RE/T/TESObjectREFR.h"
+#include "REL/RuntimeDataAccessors.h"
 #include "SKSE/Version.h"
 
 namespace RE
@@ -39,8 +40,6 @@ namespace RE
 	public:
 		// members
 		BSBitField<>* visData;  // 0
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BGSTerrainVisibilityData) == 0x8);
 
@@ -75,8 +74,6 @@ namespace RE
 	public:
 		// members
 		BSTArray<BSTSmartPointer<NavMesh>> navMeshes;  // 00
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(NavMeshArray) == 0x18);
 
@@ -180,22 +177,22 @@ namespace RE
 		~TESObjectCELL() override;  // 00
 
 		// override (TESForm)
-		void               ClearData() override;                                                                 // 05
-		bool               Load(TESFile* a_mod) override;                                                        // 06
-		TESForm*           CreateDuplicateForm(bool a_createEditorID, void* a_arg2) override;                    // 09 - { return 0; }
-		bool               FindInFileFast(TESFile* a_mod) override;                                              // 0C
-		void               SaveGame(BGSSaveFormBuffer* a_buf) override;                                          // 0E
-		void               LoadGame(BGSLoadFormBuffer* a_buf) override;                                          // 0F
-		void               Revert(BGSLoadFormBuffer* a_buf) override;                                            // 12
-		void               InitItemImpl() override;                                                              // 13
-		void               GetFormDetailedString(char* a_buf, std::uint32_t a_bufLen) override;                  // 16
-		void               SetAltered(bool a_set) override;                                                      // 24
-		bool               BelongsInGroup(FORM* a_form, bool a_allowParentGroups, bool a_currentOnly) override;  // 30
-		void               CreateGroupData(FORM* a_form, FORM_GROUP* a_group) override;                          // 31
-		const char*        GetFormEditorID() const override;                                                     // 32
-		bool               SetFormEditorID(const char* a_str) override;                                          // 33
-		[[nodiscard]] bool IsParentForm() override;                                                              // 34 - { return true; }
-		[[nodiscard]] bool IsFormTypeChild(FormType a_type) override;                                            // 36
+		void        ClearData() override;                                                                               // 05
+		bool        Load(TESFile* a_mod) override;                                                                      // 06
+		TESForm*    CreateDuplicateForm(bool a_createEditorID, NiTPointerMap<TESForm*, TESForm*>* a_copyMap) override;  // 09 - { return 0; }
+		bool        FindInFileFast(TESFile* a_mod) override;                                                            // 0C
+		void        SaveGame(BGSSaveFormBuffer* a_buf) override;                                                        // 0E
+		void        LoadGame(BGSLoadFormBuffer* a_buf) override;                                                        // 0F
+		void        Revert(BGSLoadFormBuffer* a_buf) override;                                                          // 12
+		void        InitItemImpl() override;                                                                            // 13
+		void        GetFormDetailedString(char* a_buf, std::uint32_t a_bufLen) override;                                // 16
+		void        SetAltered(bool a_set) override;                                                                    // 24
+		bool        BelongsInGroup(FORM* a_form, bool a_allowParentGroups, bool a_currentOnly) override;                // 30
+		void        CreateGroupData(FORM* a_form, FORM_GROUP* a_group) override;                                        // 31
+		const char* GetFormEditorID() const override;                                                                   // 32
+		bool        SetFormEditorID(const char* a_str) override;                                                        // 33
+		bool        IsParentForm() override;                                                                            // 34 - { return true; }
+		bool        IsFormTypeChild(FormType a_type) override;                                                          // 36
 
 		TESNPC*                      GetActorOwner();
 		bhkWorld*                    GetbhkWorld() const;
@@ -245,16 +242,7 @@ namespace RE
 			RUNTIME_DATA_CONTENT
 		};
 
-		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x60, 0x68);
-		}
-
-		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
-		{
-			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x60, 0x68);
-		}
-
+		RUNTIME_DATA_ACCESSOR_VERSIONED(RUNTIME_DATA, SKSE::RUNTIME_SSE_1_6_629, 0x60, 0x68);
 		// members
 		mutable BSSpinLock                    grassCreateLock;  // 030
 		mutable BSSpinLock                    grassTaskLock;    // 038
@@ -269,11 +257,7 @@ namespace RE
 #ifndef ENABLE_SKYRIM_AE
 		RUNTIME_DATA_CONTENT;
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
-#ifndef ENABLE_SKYRIM_AE
-	static_assert(sizeof(TESObjectCELL) == 0x140);
-#endif
+	STATIC_ASSERT_SIZE(TESObjectCELL, 0x140, 0x0, 0x140);
 }
 #undef RUNTIME_DATA_CONTENT

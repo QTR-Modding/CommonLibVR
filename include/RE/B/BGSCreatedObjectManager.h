@@ -26,6 +26,7 @@ namespace RE
 
 		EnchantmentItem* AddArmorEnchantment(BSTArray<Effect>& a_effects);
 		EnchantmentItem* AddWeaponEnchantment(BSTArray<Effect>& a_effects);
+		void             DestroyEnchantment(EnchantmentItem* a_enchantment, bool a_isWeapon);
 
 		// members
 		std::uint8_t                                    pad01;               // 01
@@ -37,8 +38,6 @@ namespace RE
 		BSTHashMap<std::uint32_t, CreatedMagicItemData> poisons;             // 68
 		BSTSet<MagicItem*>                              queuedDeletes;       // 98
 		mutable BSSpinLock                              lock;                // C8
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BGSCreatedObjectManager) == 0xD0);
 }

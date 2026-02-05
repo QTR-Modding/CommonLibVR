@@ -1,9 +1,11 @@
 #pragma once
 
 #include "RE/B/BSInstanceTriShape.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
+
 	class BSMultiStreamInstanceTriShape : public BSInstanceTriShape
 	{
 	public:
@@ -11,17 +13,26 @@ namespace RE
 		inline static constexpr auto Ni_RTTI = NiRTTI_BSMultiStreamInstanceTriShape;
 		inline static constexpr auto VTABLE = VTABLE_BSMultiStreamInstanceTriShape;
 
+		class InstanceGroup : BSMultiBoundAABB
+		{
+			ID3D11Buffer** buffer;         // 40
+			std::uint32_t  unk48;          // 48
+			std::uint32_t  instanceCount;  // 4C
+			bool           unk50;          // 50
+		};
+		static_assert(sizeof(InstanceGroup) == 0x58);
+
 		struct MULTISTREAM_TRISHAPE_RUNTIME_DATA
 		{
-#define RUNTIME_DATA_CONTENT         \
-	BSTArray<void*> unk160; /* 00 */ \
-	std::uint32_t   unk178; /* 18 */ \
-	std::uint32_t   unk17C; /* 1C */ \
-	std::uint64_t   unk180; /* 20 */ \
-	std::uint64_t   unk188; /* 28 */ \
-	std::uint32_t   unk190; /* 30 */ \
-	std::uint32_t   unk194; /* 34 */ \
-	std::uint32_t   unk198; /* 38 */
+#define RUNTIME_DATA_CONTENT                              \
+	BSTArray<InstanceGroup*> unk160;             /* 00 */ \
+	std::uint32_t            instanceGroupCount; /* 18 */ \
+	std::uint32_t            unk17C;             /* 1C */ \
+	std::uint64_t            unk180;             /* 20 */ \
+	void*                    groupAlloc;         /* 28 */ \
+	std::uint32_t            instanceCount;      /* 30 */ \
+	std::uint32_t            instanceSize;       /* 34 */ \
+	std::uint32_t            unk198;             /* 38 */
 
 			RUNTIME_DATA_CONTENT
 		};
@@ -34,7 +45,7 @@ namespace RE
 		NiObject*     CreateClone(NiCloningProcess& a_cloning) override;  // 17
 #if defined(EXCLUSIVE_SKYRIM_FLAT)
 		// The following are virtual functions past the point where VR compatibility breaks.
-		void OnVisible(NiCullingProcess& a_process) override;  // 34
+		void OnVisible(NiCullingProcess& a_process, std::int32_t a_alphaGroupIndex) override;  // 34
 
 		// overrides for BSTriShape
 		void          Unk_37(void) override;                                                                                               // 37
@@ -46,25 +57,12 @@ namespace RE
 		void          RemoveGroup(std::uint32_t a_numInstance) override;                                                                   // 3D
 #endif
 
-		[[nodiscard]] inline MULTISTREAM_TRISHAPE_RUNTIME_DATA& GetMultiStreamTrishapeRuntimeData() noexcept
-		{
-			return REL::RelocateMember<MULTISTREAM_TRISHAPE_RUNTIME_DATA>(this, 0x160, 0x1A8);
-		}
-
-		[[nodiscard]] inline const MULTISTREAM_TRISHAPE_RUNTIME_DATA& GetMultiStreamTrishapeRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<MULTISTREAM_TRISHAPE_RUNTIME_DATA>(this, 0x160, 0x1A8);
-		}
-
+		RUNTIME_DATA_ACCESSOR_EX(MULTISTREAM_TRISHAPE_RUNTIME_DATA, GetMultiStreamTrishapeRuntimeData, 0x160, 0x1A8);
 		// members
 #ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT  // 160, 1A8
 #endif
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(BSMultiStreamInstanceTriShape) == 0x1A0);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(BSMultiStreamInstanceTriShape) == 0x1E8);
-#endif
+	STATIC_ASSERT_SIZE(BSMultiStreamInstanceTriShape, 0x1A0, 0x1A0, 0x1E8, 0x110);
 }
 #undef RUNTIME_DATA_CONTENT

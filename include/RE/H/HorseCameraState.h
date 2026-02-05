@@ -6,8 +6,6 @@
 
 namespace RE
 {
-	class NiNode;
-
 	class HorseCameraState : public ThirdPersonState
 	{
 	public:
@@ -34,18 +32,13 @@ namespace RE
 		void ProcessWeaponDrawnChange(bool a_drawn) override;      // 0B/0C
 		bool GetFreeRotationMode() const override;                 // 0C/0D
 		void SetFreeRotationMode(bool a_weaponSheathed) override;  // 0D/0E
+		void UpdateRotation() override;                            // 0E/0F
 		void HandleLookInput(const NiPoint2& a_input) override;    // 0F/10
 
 		// members
 		ObjectRefHandle horseRefHandle;         // E8
 		float           horseCurrentDirection;  // EC
 		std::uint64_t   unkF0;                  // F0
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(HorseCameraState) == 0x110);
-#else
-	static_assert(sizeof(HorseCameraState) == 0xF8);
-#endif
+	STATIC_ASSERT_SIZE(HorseCameraState, 0xF8, 0x110);
 }

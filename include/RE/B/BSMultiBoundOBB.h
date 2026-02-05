@@ -25,7 +25,7 @@ namespace RE
 		std::uint32_t GetType() override;                                 // 25 - { return 2; }
 		bool          Unk_27() override;                                  // 27
 		void          Unk_28() override;                                  // 28
-		bool          Unk_29() override;                                  // 29
+		bool          WithinFrustum(NiFrustumPlanes const&) override;     // 29
 		void          Unk_2A() override;                                  // 2A
 		void          Unk_2B() override;                                  // 2B
 		bool          GetWithinPoint(const NiPoint3& a_pos) override;     // 2C
@@ -36,8 +36,6 @@ namespace RE
 		bool          unk64;     // 64
 		std::uint8_t  pad65;     // 65
 		std::uint16_t pad66;     // 66
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BSMultiBoundOBB) == 0x68);
 }

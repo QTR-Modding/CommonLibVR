@@ -1,5 +1,8 @@
 #pragma once
 
+#include "RE/B/BSTEvent.h"
+#include "RE/I/InputEvent.h"
+
 #include "RE/H/HeldStateHandler.h"
 
 namespace RE
@@ -41,12 +44,6 @@ namespace RE
 		bool          heldLeft;                    // 42
 		bool          heldRight;                   // 43
 		std::uint32_t unk44;                       // 44
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(AttackBlockHandler) == 0x60);
-#else
-	static_assert(sizeof(AttackBlockHandler) == 0x48);
-#endif
+	STATIC_ASSERT_SIZE(AttackBlockHandler, 0x48, 0x48, 0x60, 0x48);
 }

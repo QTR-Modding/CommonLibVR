@@ -21,11 +21,11 @@ namespace RE
 		bool          IsOcclusionPlane() const override;                  // 25
 		bool          IsOcclusionBox() const override;                    // 25
 
+		bool WithinFrustumDistFirst(const NiFrustumPlanes* a_planes, const NiPoint3* a_point);
+
 		// members
 		NiPoint2          size;     // 48
 		BSCompoundFrustum frustum;  // 50
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BSOcclusionPlane) == 0x118);
 }
