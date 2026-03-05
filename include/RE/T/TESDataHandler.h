@@ -1,14 +1,15 @@
 #pragma once
 
 #include "RE/B/BSPointerHandle.h"
+#include "RE/B/BSSimpleList.h"
 #include "RE/B/BSTArray.h"
-#include "RE/B/BSTList.h"
 #include "RE/B/BSTSingleton.h"
 #include "RE/F/FormTypes.h"
 #include "RE/I/InventoryChanges.h"
 #include "RE/N/NiTArray.h"
 #include "RE/N/NiTList.h"
 #include "RE/T/TESForm.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
@@ -76,6 +77,7 @@ namespace RE
 
 		ObjectRefHandle CreateReferenceAtLocation(TESBoundObject* a_base, const NiPoint3& a_location, const NiPoint3& a_rotation, TESObjectCELL* a_targetCell, TESWorldSpace* a_selfWorldSpace, TESObjectREFR* a_alreadyCreatedRef, BGSPrimitive* a_primitive, const ObjectRefHandle& a_linkedRoomRefHandle, bool a_forcePersist, bool a_arg11);
 
+		// Common runtime flags shared by SE/AE and VR (at different offsets)
 		struct RUNTIME_DATA
 		{
 #define RUNTIME_DATA_CONTENT \
@@ -93,16 +95,12 @@ namespace RE
 			RUNTIME_DATA_CONTENT
 		};
 
-		[[nodiscard]] inline RUNTIME_DATA& GetGeometryRuntimeData() noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0xDA0, 0x1570);
-		}
+		// Common trailing members shared by SE/AE and VR (at different offsets)
+#define TRAILING_MEMBERS_CONTENT                                           \
+	TESRegionDataManager* regionDataManager; /* DB0 (SE/AE) / 1580 (VR) */ \
+	InventoryChanges*     merchantInventory; /* DB8 (SE/AE) / 1588 (VR) */
 
-		[[nodiscard]] inline const RUNTIME_DATA& GetGeometryRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0xDA0, 0x1570);
-		}
-
+		RUNTIME_DATA_ACCESSOR_EX(RUNTIME_DATA, GetGeometryRuntimeData, 0xDA0, 0x1570);
 		[[nodiscard]] inline TESFile** GetLoadedMods() noexcept
 		{
 			if SKYRIM_REL_CONSTEXPR (REL::Module::IsVR()) {
@@ -157,25 +155,11 @@ namespace RE
 			}
 		}
 
-		[[nodiscard]] inline TESRegionDataManager* GetRegionDataManager() noexcept
-		{
-			return REL::RelocateMember<TESRegionDataManager*>(this, 0xDB0, 0x1580);
-		}
+		RUNTIME_DATA_ACCESSOR_EX(std::uint8_t, GetGameSettingsLoadState, 0xDAA, 0x157A)
 
-		[[nodiscard]] inline const TESRegionDataManager* GetRegionDataManager() const noexcept
-		{
-			return REL::RelocateMember<TESRegionDataManager*>(this, 0xDB0, 0x1580);
-		}
+		RUNTIME_DATA_POINTER_ACCESSOR_EX(TESRegionDataManager*, GetRegionDataManager, 0xDB0, 0x1580);
 
-		[[nodiscard]] inline InventoryChanges* GetMerchantInventory() noexcept
-		{
-			return REL::RelocateMember<InventoryChanges*>(this, 0xDB8, 0x1588);
-		}
-
-		[[nodiscard]] inline const InventoryChanges* GetMerchantInventory() const noexcept
-		{
-			return REL::RelocateMember<InventoryChanges*>(this, 0xDB8, 0x1588);
-		}
+		RUNTIME_DATA_POINTER_ACCESSOR_EX(InventoryChanges*, GetMerchantInventory, 0xDB8, 0x1588);
 
 		// members
 		std::uint8_t                      pad001;                                         // 001
@@ -191,25 +175,24 @@ namespace RE
 		std::uint32_t                     padD54;                                         // D54
 		TESFile*                          activeFile;                                     // D58
 		BSSimpleList<TESFile*>            files;                                          // D60
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
+#if !defined(SKYRIM_CROSS_VR)
+#	if defined(EXCLUSIVE_SKYRIM_FLAT)
 		TESFileCollection compiledFileCollection;  // D70
 		RUNTIME_DATA_CONTENT
-		std::uint8_t          unkDAA;             // DAA
-		std::uint8_t          padDAB;             // DAB
-		std::uint32_t         padDAC;             // DAC
-		TESRegionDataManager* regionDataManager;  // DB0
-		InventoryChanges*     merchantInventory;  // DB8
-#elif defined(EXCLUSIVE_SKYRIM_VR)
+		std::uint8_t  gameSettingsLoadState;  // DAA
+		std::uint8_t  padDAB;                 // DAB
+		std::uint32_t padDAC;                 // DAC
+		TRAILING_MEMBERS_CONTENT
+#	elif defined(EXCLUSIVE_SKYRIM_VR)
 		std::uint32_t loadedModCount;    // D70 this should be avoided if SkyrimVRESL is available
 		std::uint32_t pad14;             // D74
 		TESFile*      loadedMods[0xFF];  // D78 this should be avoided if SkyrimVRESL is available
 		RUNTIME_DATA_CONTENT
-		std::uint8_t          pad157B[5];         // 157B
-		TESRegionDataManager* regionDataManager;  // 1580
-		InventoryChanges*     merchantInventory;  // 1588
+		std::uint8_t gameSettingsLoadState;  // 157A
+		std::uint8_t pad157B[4];             // 157B
+		TRAILING_MEMBERS_CONTENT
+#	endif
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
 
 	template <class T>
@@ -240,4 +223,6 @@ namespace RE
 		return reinterpret_cast<BSTArray<T*>&>(GetFormArray(T::FORMTYPE));
 	}
 }
+
 #undef RUNTIME_DATA_CONTENT
+#undef TRAILING_MEMBERS_CONTENT

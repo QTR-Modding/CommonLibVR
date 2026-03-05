@@ -3,6 +3,7 @@
 #include "RE/N/NiLight.h"
 
 #include "RE/M/MemoryManager.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
@@ -49,16 +50,7 @@ namespace RE
 			return func(this, a_radius);
 		}
 
-		[[nodiscard]] inline POINT_LIGHT_RUNTIME_DATA& GetPointLightRuntimeData() noexcept
-		{
-			return REL::RelocateMember<POINT_LIGHT_RUNTIME_DATA>(this, 0x140, 0x168);
-		}
-
-		[[nodiscard]] inline const POINT_LIGHT_RUNTIME_DATA& GetPointLightRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<POINT_LIGHT_RUNTIME_DATA>(this, 0x140, 0x168);
-		}
-
+		RUNTIME_DATA_ACCESSOR_EX(POINT_LIGHT_RUNTIME_DATA, GetPointLightRuntimeData, 0x140, 0x168);
 		// members
 #ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT;  // 140, 168
@@ -70,12 +62,7 @@ namespace RE
 			static REL::Relocation<func_t> func{ RELOCATION_ID(69583, 70967) };
 			return func(this);
 		}
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(NiPointLight) == 0x150);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(NiPointLight) == 0x178);
-#endif
+	STATIC_ASSERT_SIZE(NiPointLight, 0x150, 0x150, 0x178, 0x110);
 }
 #undef RUNTIME_DATA_CONTENT

@@ -81,9 +81,6 @@ namespace RE
 
 	private:
 		PlayerControls* Ctor();
-
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(PlayerControls) == 0x1E0);
 }

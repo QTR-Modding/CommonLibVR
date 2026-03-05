@@ -3,6 +3,7 @@
 #include "RE/I/ImageSpaceData.h"
 #include "RE/I/ImageSpaceTexture.h"
 #include "RE/N/NiColor.h"
+#include "RE/N/NiRect.h"
 #include "RE/N/NiSmartPointer.h"
 #include "RE/N/NiTArray.h"
 #include <algorithm>
@@ -394,25 +395,9 @@ namespace RE
 			return *singleton;
 		}
 
-		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x58, 0);
-		}
+		RUNTIME_DATA_ACCESSOR(RUNTIME_DATA, 0x58, 0);
 
-		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x58, 0);
-		}
-
-		[[nodiscard]] inline VR_RUNTIME_DATA& GetVRRuntimeData() noexcept
-		{
-			return REL::RelocateMember<VR_RUNTIME_DATA>(this, 0, 0x58);
-		}
-
-		[[nodiscard]] inline const VR_RUNTIME_DATA& GetVRRuntimeData() const noexcept
-		{
-			return REL::RelocateMember<VR_RUNTIME_DATA>(this, 0, 0x58);
-		}
+		VR_RUNTIME_DATA_ACCESSOR(VR_RUNTIME_DATA, GetVRRuntimeData, 0x58);
 
 		/**
 		 * @brief Gets all effects supported by the current runtime, sorted by index.
@@ -483,10 +468,7 @@ namespace RE
 		// members
 		std::uint64_t                        unk00;       /* 000 */
 		std::uint64_t                        unk08;       /* 008 */
-		std::int32_t                         left;        /* 010 */
-		std::int32_t                         right;       /* 014 */
-		std::int32_t                         top;         /* 018 */
-		std::int32_t                         bottom;      /* 01c */
+		NiRect<std::int32_t>                 rect;        // 010
 		NiTPrimitiveArray<ImageSpaceEffect*> effects;     /* 020 */
 		bool                                 initEffects; /* 038 */
 		std::uint32_t                        unk3C;       /* 03C */
@@ -498,17 +480,8 @@ namespace RE
 #elif defined(EXCLUSIVE_SKYRIM_VR)
 		VR_RUNTIME_DATA_CONTENT
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(ImageSpaceManager) == 0x220);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(ImageSpaceManager) == 0x248);
-#else
-	static_assert(sizeof(ImageSpaceManager) == 0x58);
-
-#endif
+	STATIC_ASSERT_SIZE(ImageSpaceManager, 0x220, 0x220, 0x248, 0x58);
 }
 #undef RUNTIME_DATA_CONTENT
 #undef VR_RUNTIME_DATA_CONTENT

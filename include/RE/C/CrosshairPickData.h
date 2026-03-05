@@ -17,7 +17,8 @@ namespace RE
 			kRightController,
 			kHeadset,  // Can be kGamepad when in gamepad mode
 
-			kTotal
+			kTotal,
+			kNone = 0xFFFFFFFF
 		};
 	};
 	using VR_DEVICE = VRControls::VR_DEVICE;
@@ -62,12 +63,6 @@ namespace RE
 		std::uint16_t                    unk84;                              // 84
 		std::byte                        unk86;                              // 86
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(CrosshairPickData) == 0x38);
-#else
-	static_assert(sizeof(CrosshairPickData) == 0x88);
-#endif
+	STATIC_ASSERT_SIZE(CrosshairPickData, 0x38, 0x38, 0x88, 0x88);
 }

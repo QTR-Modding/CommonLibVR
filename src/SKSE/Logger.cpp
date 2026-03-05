@@ -151,7 +151,6 @@ namespace SKSE
 			//spdlog::set_pattern("[%T.%e] [%=5t] [%L] %v");
 			spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$] [%s:%#] %v");
 
-
 #endif
 		}
 	}

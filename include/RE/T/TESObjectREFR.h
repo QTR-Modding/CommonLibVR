@@ -19,6 +19,7 @@
 #include "RE/N/NiSmartPointer.h"
 #include "RE/N/NiTransform.h"
 #include "RE/T/TESForm.h"
+#include "REL/RuntimeDataAccessors.h"
 #include "SKSE/Version.h"
 
 namespace RE
@@ -175,6 +176,7 @@ namespace RE
 
 				kDoesntLightLandscape = 1 << 17,
 
+				kTemp3D = 1 << 19,
 				kIgnoreFriendlyHits = 1 << 20,  // Actor
 
 				kNoAIAcquire = 1 << 25,
@@ -194,35 +196,35 @@ namespace RE
 		~TESObjectREFR() override;  // 00
 
 		// override (TESForm)
-		void                 InitializeData() override;                                                            // 04
-		void                 ClearData() override;                                                                 // 05
-		bool                 Load(TESFile* a_mod) override;                                                        // 06
-		TESForm*             CreateDuplicateForm(bool a_createEditorID, void* a_arg2) override;                    // 09
-		bool                 CheckSaveGame(BGSSaveFormBuffer* a_buf) override;                                     // 0D
-		void                 SaveGame(BGSSaveFormBuffer* a_buf) override;                                          // 0E
-		void                 LoadGame(BGSLoadFormBuffer* a_buf) override;                                          // 0F
-		void                 InitLoadGame(BGSLoadFormBuffer* a_buf) override;                                      // 10
-		void                 FinishLoadGame(BGSLoadFormBuffer* a_buf) override;                                    // 11
-		void                 Revert(BGSLoadFormBuffer* a_buf) override;                                            // 12
-		void                 InitItemImpl() override;                                                              // 13
-		FormType             GetSavedFormType() const override;                                                    // 15
-		void                 GetFormDetailedString(char* a_buf, std::uint32_t a_bufLen) override;                  // 16
-		bool                 GetRandomAnim() const override;                                                       // 18 - { return data.objectReference->GetRandomAnim(); }
-		bool                 IsHeadingMarker() const override;                                                     // 1A - { return data.objectReference->formType == FormType::Light ? (flags & RecordFlags::kNeverFades) != 0 : false; }
-		bool                 GetDangerous() const override;                                                        // 1B - { return data.objectReference->GetDangerous(); }
-		bool                 GetObstacle() const override;                                                         // 1D - { return data.objectReference ? data.objectReference->GetObstacle() : false; }
-		bool                 GetOnLocalMap() const override;                                                       // 1F - { return (flags >> 9) & 1 && data.objectReference->GetOnLocalMap(); }
-		bool                 GetMustUpdate() const override;                                                       // 20 - { return data.objectReference->GetMustUpdate(); }
-		void                 SetOnLocalMap(bool a_set) override;                                                   // 21
-		bool                 GetIgnoredBySandbox() const override;                                                 // 22
-		void                 SetDelete(bool a_set) override;                                                       // 23
-		void                 SetAltered(bool a_set) override;                                                      // 24
-		bool                 IsWater() const override;                                                             // 2A - { return data.objectReference ? data.objectReference->IsWater() : false; }
-		TESObjectREFR*       AsReference1() override;                                                              // 2B - { return this; }
-		const TESObjectREFR* AsReference2() const override;                                                        // 2C - { return this; }
-		bool                 BelongsInGroup(FORM* a_form, bool a_allowParentGroups, bool a_currentOnly) override;  // 30
-		void                 CreateGroupData(FORM* a_form, FORM_GROUP* a_group) override;                          // 31
-		const char*          GetFormEditorID() const override;                                                     // 32
+		void                 InitializeData() override;                                                                          // 04
+		void                 ClearData() override;                                                                               // 05
+		bool                 Load(TESFile* a_mod) override;                                                                      // 06
+		TESForm*             CreateDuplicateForm(bool a_createEditorID, NiTPointerMap<TESForm*, TESForm*>* a_copyMap) override;  // 09
+		bool                 CheckSaveGame(BGSSaveFormBuffer* a_buf) override;                                                   // 0D
+		void                 SaveGame(BGSSaveFormBuffer* a_buf) override;                                                        // 0E
+		void                 LoadGame(BGSLoadFormBuffer* a_buf) override;                                                        // 0F
+		void                 InitLoadGame(BGSLoadFormBuffer* a_buf) override;                                                    // 10
+		void                 FinishLoadGame(BGSLoadFormBuffer* a_buf) override;                                                  // 11
+		void                 Revert(BGSLoadFormBuffer* a_buf) override;                                                          // 12
+		void                 InitItemImpl() override;                                                                            // 13
+		FormType             GetSavedFormType() const override;                                                                  // 15
+		void                 GetFormDetailedString(char* a_buf, std::uint32_t a_bufLen) override;                                // 16
+		bool                 GetRandomAnim() const override;                                                                     // 18 - { return data.objectReference->GetRandomAnim(); }
+		bool                 IsHeadingMarker() const override;                                                                   // 1A - { return data.objectReference->formType == FormType::Light ? (flags & RecordFlags::kNeverFades) != 0 : false; }
+		bool                 GetDangerous() const override;                                                                      // 1B - { return data.objectReference->GetDangerous(); }
+		bool                 GetObstacle() const override;                                                                       // 1D - { return data.objectReference ? data.objectReference->GetObstacle() : false; }
+		bool                 GetOnLocalMap() const override;                                                                     // 1F - { return (flags >> 9) & 1 && data.objectReference->GetOnLocalMap(); }
+		bool                 GetMustUpdate() const override;                                                                     // 20 - { return data.objectReference->GetMustUpdate(); }
+		void                 SetOnLocalMap(bool a_set) override;                                                                 // 21
+		bool                 GetIgnoredBySandbox() const override;                                                               // 22
+		void                 SetDelete(bool a_set) override;                                                                     // 23
+		void                 SetAltered(bool a_set) override;                                                                    // 24
+		bool                 IsWater() const override;                                                                           // 2A - { return data.objectReference ? data.objectReference->IsWater() : false; }
+		TESObjectREFR*       AsReference1() override;                                                                            // 2B - { return this; }
+		const TESObjectREFR* AsReference2() const override;                                                                      // 2C - { return this; }
+		bool                 BelongsInGroup(FORM* a_form, bool a_allowParentGroups, bool a_currentOnly) override;                // 30
+		void                 CreateGroupData(FORM* a_form, FORM_GROUP* a_group) override;                                        // 31
+		const char*          GetFormEditorID() const override;                                                                   // 32
 
 		// override (BSTEventSink<BSAnimationGraphEvent>)
 		BSEventNotifyControl ProcessEvent(const BSAnimationGraphEvent* a_event, BSTEventSource<BSAnimationGraphEvent>* a_dispatcher) override;  // 01
@@ -256,7 +258,7 @@ namespace RE
 		virtual bool                                            UpdateInDialogue(DialogueResponse* a_response, bool a_unused);                                                                                                                                               // 4C
 		[[nodiscard]] virtual BGSDialogueBranch*                GetExclusiveBranch() const;                                                                                                                                                                                  // 4D
 		virtual void                                            SetExclusiveBranch(BGSDialogueBranch* a_branch);                                                                                                                                                             // 4E
-		virtual void                                            PauseCurrentDialogue();                                                                                                                                                                                      // 4F
+		virtual void                                            StopCurrentDialogue();                                                                                                                                                                                       // 4F
 		virtual void                                            SetActorCause(ActorCause* a_cause);                                                                                                                                                                          // 50
 		[[nodiscard]] virtual ActorCause*                       GetActorCause() const;                                                                                                                                                                                       // 51
 		[[nodiscard]] virtual NiPoint3                          GetStartingAngle() const;                                                                                                                                                                                    // 52
@@ -395,6 +397,8 @@ namespace RE
 		[[nodiscard]] InventoryCountMap                 GetInventoryCounts();
 		[[nodiscard]] InventoryCountMap                 GetInventoryCounts(std::function<bool(TESBoundObject&)> a_filter, bool a_noInit = false);
 		[[nodiscard]] InventoryChanges*                 GetInventoryChanges(bool a_noInit = false);
+		[[nodiscard]] RE::InventoryEntryData*           GetInventoryItemAt(std::int32_t a_index, bool a_isViewingContainer = false) const;
+		[[nodiscard]] std::int32_t                      GetInventoryItemCount(bool a_isViewingContainer = false, bool a_playable = true) const;
 		[[nodiscard]] TESObjectREFR*                    GetLinkedRef(BGSKeyword* a_keyword);
 		[[nodiscard]] REFR_LOCK*                        GetLock() const;
 		[[nodiscard]] LOCK_LEVEL                        GetLockLevel() const;
@@ -448,6 +452,7 @@ namespace RE
 		[[nodiscard]] bool                              IsPersistent() const;
 		[[nodiscard]] float                             IsPointDeepUnderWater(float a_zPos, TESObjectCELL* a_cell) const;
 		[[nodiscard]] bool                              IsPointSubmergedMoreThan(const NiPoint3& a_pos, TESObjectCELL* a_cell, float a_waterLevel) const;
+		void                                            MoveRefToNewSpace(TESObjectCELL* a_interior, TESWorldSpace* a_world);
 		void                                            MoveTo(TESObjectREFR* a_target);
 		bool                                            MoveToNode(TESObjectREFR* a_target, const BSFixedString& a_nodeName);
 		bool                                            MoveToNode(TESObjectREFR* a_target, NiAVObject* a_node);
@@ -481,24 +486,18 @@ namespace RE
 		};
 		static_assert(sizeof(REFERENCE_RUNTIME_DATA) == 0x10);
 
-		[[nodiscard]] inline REFERENCE_RUNTIME_DATA& GetReferenceRuntimeData() noexcept
-		{
-			return REL::RelocateMemberIfNewer<REFERENCE_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x88, 0x90);
-		}
-
-		[[nodiscard]] inline const REFERENCE_RUNTIME_DATA& GetReferenceRuntimeData() const noexcept
-		{
-			return REL::RelocateMemberIfNewer<REFERENCE_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x88, 0x90);
-		}
-
+		RUNTIME_DATA_ACCESSOR_VERSIONED_EX(REFERENCE_RUNTIME_DATA, GetReferenceRuntimeData, SKSE::RUNTIME_SSE_1_6_629, 0x88, 0x90);
 		// members
 		OBJ_REFR         data;        // 40
 		TESObjectCELL*   parentCell;  // 60
 		LOADED_REF_DATA* loadedData;  // 68
 		ExtraDataList    extraList;   // 70
 
-#ifndef ENABLE_SKYRIM_AE
-		RUNTIME_DATA_CONTENT
+#if defined(EXCLUSIVE_SKYRIM_SE) || defined(EXCLUSIVE_SKYRIM_VR)
+		RUNTIME_DATA_CONTENT;  // 0x88
+#elif defined(EXCLUSIVE_SKYRIM_AE)
+		// No padding needed - ExtraDataList naturally ends at 0x90
+		RUNTIME_DATA_CONTENT;  // 0x90
 #endif
 
 	private:
@@ -506,12 +505,7 @@ namespace RE
 		InventoryChanges* MakeInventoryChanges();
 		void              MoveTo_Impl(const ObjectRefHandle& a_targetHandle, TESObjectCELL* a_targetCell, TESWorldSpace* a_selfWorldSpace, const NiPoint3& a_position, const NiPoint3& a_rotation);
 		void              PlayAnimation_Impl(NiControllerManager* a_manager, NiControllerSequence* a_toSeq, NiControllerSequence* a_fromSeq, bool a_arg4 = false);
-		KEEP_FOR_RE()
 	};
-#ifndef ENABLE_SKYRIM_AE
-	static_assert(sizeof(TESObjectREFR) == 0x98);
-#else
-	static_assert(sizeof(TESObjectREFR) == 0x78);
-#endif
+	STATIC_ASSERT_SIZE(TESObjectREFR, 0x98, 0x88, 0x98);
 }
 #undef RUNTIME_DATA_CONTENT

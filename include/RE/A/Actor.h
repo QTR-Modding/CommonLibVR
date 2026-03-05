@@ -2,6 +2,7 @@
 
 #include "RE/A/AITimeStamp.h"
 #include "RE/A/ActiveEffect.h"
+#include "RE/A/ActorLOSLocation.h"
 #include "RE/A/ActorState.h"
 #include "RE/A/ActorValueOwner.h"
 #include "RE/A/ActorValues.h"
@@ -9,9 +10,9 @@
 #include "RE/B/BGSEntryPointPerkEntry.h"
 #include "RE/B/BSPointerHandle.h"
 #include "RE/B/BSPointerHandleSmartPointer.h"
+#include "RE/B/BSSimpleList.h"
 #include "RE/B/BSTArray.h"
 #include "RE/B/BSTEvent.h"
-#include "RE/B/BSTList.h"
 #include "RE/B/BSTSmartPointer.h"
 #include "RE/B/BSTTuple.h"
 #include "RE/D/DetectionPriorities.h"
@@ -24,6 +25,7 @@
 #include "RE/T/TESNPC.h"
 #include "RE/T/TESObjectREFR.h"
 
+#include "REL/RuntimeDataAccessors.h"
 #include "REX/W32/BASE.h"
 
 namespace RE
@@ -53,6 +55,15 @@ namespace RE
 	struct HighProcessData;
 	struct MiddleHighProcessData;
 
+	enum class SKILL_ACTION
+	{
+		kNormalUse = 0,
+		kPowerAttack,
+		kBash,
+		kLockpickSuccess,
+		kLockpickBroken
+	};
+
 	enum class ACTOR_CRITICAL_STAGE
 	{
 		kNone = 0,
@@ -60,17 +71,6 @@ namespace RE
 		kGooEnd = 2,
 		kDisintegrateStart = 3,
 		kDisintegrateEnd = 4,
-
-		kTotal
-	};
-
-	enum class ACTOR_LOS_LOCATION
-	{
-		kNone = 0,
-		kEye = 1,
-		kHead = 2,
-		kTorso = 3,
-		kFeet = 4,
 
 		kTotal
 	};
@@ -135,7 +135,6 @@ namespace RE
 	NiSmartPointer(Actor);
 
 	class Actor :
-#ifndef ENABLE_SKYRIM_AE
 		public TESObjectREFR,                              // 000
 		public MagicTarget,                                // 098, 0A0
 		public ActorValueOwner,                            // 0B0, 0B8
@@ -143,9 +142,6 @@ namespace RE
 		public BSTEventSink<BSTransformDeltaEvent>,        // 0C8, 0D0
 		public BSTEventSink<bhkCharacterMoveFinishEvent>,  // 0D0, 0D8
 		public IPostAnimationChannelUpdateFunctor          // 0D8, 0E0
-#else
-		public TESObjectREFR  // 000
-#endif
 	{
 	private:
 		using EntryPoint = BGSEntryPointPerkEntry::EntryPoint;
@@ -310,7 +306,7 @@ namespace RE
 		bool                                 UpdateInDialogue(DialogueResponse* a_response, bool a_unused) override;                                                                                                                                               // 04C
 		[[nodiscard]] BGSDialogueBranch*     GetExclusiveBranch() const override;                                                                                                                                                                                  // 04D - { return exclusiveBranch; }
 		void                                 SetExclusiveBranch(BGSDialogueBranch* a_branch) override;                                                                                                                                                             // 04E - { exclusiveBranch = a_arg1; }
-		void                                 PauseCurrentDialogue(void) override;                                                                                                                                                                                  // 04F
+		void                                 StopCurrentDialogue(void) override;                                                                                                                                                                                   // 04F
 		[[nodiscard]] NiPoint3               GetStartingAngle() const override;                                                                                                                                                                                    // 052
 		[[nodiscard]] NiPoint3               GetStartingLocation() const override;                                                                                                                                                                                 // 053
 		ObjectRefHandle                      RemoveItem(TESBoundObject* a_item, std::int32_t a_count, ITEM_REMOVE_REASON a_reason, ExtraDataList* a_extraList, TESObjectREFR* a_moveToRef, const NiPoint3* a_dropLoc = 0, const NiPoint3* a_rotate = 0) override;  // 056
@@ -366,7 +362,7 @@ namespace RE
 #endif
 
 		// override (MagicTarget)
-#ifndef ENABLE_SKYRIM_AE
+#ifndef ENABLE_SKYRIM_VR
 		[[nodiscard]] Actor*                       GetTargetStatsObject() override;      // 002 - { return this; }
 		[[nodiscard]] bool                         MagicTargetIsActor() const override;  // 003 - { return true; }
 		[[nodiscard]] BSSimpleList<ActiveEffect*>* GetActiveEffectList() override;       // 007
@@ -547,8 +543,10 @@ namespace RE
 		[[nodiscard]] float                     GetActorValueModifier(ACTOR_VALUE_MODIFIER a_modifier, ActorValue a_value) const;
 		[[nodiscard]] float                     GetAimAngle() const;
 		[[nodiscard]] float                     GetAimHeading() const;
+		float                                   GetAttackReach() const;
 		[[nodiscard]] InventoryEntryData*       GetAttackingWeapon();
 		[[nodiscard]] const InventoryEntryData* GetAttackingWeapon() const;
+		float                                   GetBoundRadius() const;
 		[[nodiscard]] bhkCharacterController*   GetCharController() const;
 		void                                    GetCollisionFilterInfo(CFilter& a_outCollisionFilterInfo);
 		[[nodiscard]] NiPointer<Actor>          GetCommandingActor() const;
@@ -579,7 +577,6 @@ namespace RE
 		[[nodiscard]] bool                      GetPlayerControls() const;
 		[[nodiscard]] TESRace*                  GetRace() const;
 		[[nodiscard]] float                     GetRegenDelay(ActorValue a_actorValue) const;
-		[[nodiscard]] bool                      GetRider(NiPointer<Actor>& a_outRider);
 		[[nodiscard]] TESObjectARMO*            GetSkin() const;
 		[[nodiscard]] TESObjectARMO*            GetSkin(BGSBipedObjectForm::BipedObjectSlot a_slot, bool a_noInit = false);
 		[[nodiscard]] SOUL_LEVEL                GetSoulSize() const;
@@ -621,7 +618,7 @@ namespace RE
 		[[nodiscard]] bool                      IsGuard() const;
 		[[nodiscard]] bool                      IsHostileToActor(Actor* a_actor);
 		[[nodiscard]] bool                      IsInCastPowerList(SpellItem* a_power);
-		[[nodiscard]] constexpr bool            IsInKillMove() const noexcept { return GetActorRuntimeData().boolFlags.all(BOOL_FLAGS::kIsInKillMove); }
+		[[nodiscard]] bool                      IsInKillMove() const noexcept { return GetActorRuntimeData().boolFlags.all(BOOL_FLAGS::kIsInKillMove); }
 		[[nodiscard]] bool                      IsInMidair() const;
 		[[nodiscard]] bool                      IsInRagdollState() const;
 		[[nodiscard]] bool                      IsLeveled() const;
@@ -629,6 +626,7 @@ namespace RE
 		[[nodiscard]] bool                      IsMoving() const;
 		[[nodiscard]] bool                      IsOnMount() const;
 		[[nodiscard]] bool                      IsOverEncumbered() const;
+		bool                                    IsPathing() const;
 		[[nodiscard]] bool                      IsPlayerTeammate() const;
 		[[nodiscard]] bool                      IsPowerAttacking() const;
 		[[nodiscard]] bool                      IsProtected() const;
@@ -643,6 +641,7 @@ namespace RE
 		void                                    ProcessVATSAttack(MagicCaster* a_caster, bool a_hasTargetAnim, TESObjectREFR* a_target, bool a_leftHand);
 		void                                    RemoveAnimationGraphEventSink(BSTEventSink<BSAnimationGraphEvent>* a_sink) const;
 		void                                    RemoveCastScroll(SpellItem* a_spell, MagicSystem::CastingSource a_source);
+		void                                    RefreshEquippedActorValueCharge(const RE::TESForm* a_object, const RE::ExtraDataList* a_extraList, bool a_isLeft);
 		void                                    RemoveExtraArrows3D();
 		void                                    RemoveFromFaction(TESFaction* a_faction);
 		void                                    RemoveOutfitItems(BGSOutfit* a_outfit);
@@ -727,8 +726,8 @@ namespace RE
 	BSTSmartPointer<BipedAnim>                        biped;                             /* 260 */ \
 	float                                             armorRating;                       /* 268 */ \
 	float                                             armorBaseFactorSum;                /* 26C */ \
-	std::int8_t                                       soundCallBackSet;                  /* 271 */ \
-	std::uint8_t                                      unk271;                            /* 270 */ \
+	std::int8_t                                       soundCallBackSet;                  /* 270 */ \
+	std::uint8_t                                      unk271;                            /* 271 */ \
 	std::uint8_t                                      unk272;                            /* 272 */ \
 	std::uint8_t                                      unk273;                            /* 273 */ \
 	std::uint32_t                                     unk274;                            /* 274 */ \
@@ -739,76 +738,13 @@ namespace RE
 			RUNTIME_DATA_CONTENT
 		};
 
-		[[nodiscard]] inline ACTOR_RUNTIME_DATA& GetActorRuntimeData() noexcept
-		{
-			return REL::RelocateMemberIfNewer<ACTOR_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0xE0, 0xE8);
-		}
-
-		[[nodiscard]] inline const ACTOR_RUNTIME_DATA& GetActorRuntimeData() const noexcept
-		{
-			return REL::RelocateMemberIfNewer<ACTOR_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0xE0, 0xE8);
-		}
-
-		[[nodiscard]] inline MagicTarget* AsMagicTarget() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<MagicTarget>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
-		}
-
-		[[nodiscard]] inline const MagicTarget* AsMagicTarget() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<MagicTarget>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
-		}
-
-		[[nodiscard]] inline ActorValueOwner* AsActorValueOwner() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<ActorValueOwner>(SKSE::RUNTIME_SSE_1_6_629, this, 0xB0, 0xB8);
-		}
-
-		[[nodiscard]] inline const ActorValueOwner* AsActorValueOwner() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<ActorValueOwner>(SKSE::RUNTIME_SSE_1_6_629, this, 0xB0, 0xB8);
-		}
-
-		[[nodiscard]] inline ActorState* AsActorState() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<ActorState>(SKSE::RUNTIME_SSE_1_6_629, this, 0xB8, 0xC0);
-		}
-
-		[[nodiscard]] inline const ActorState* AsActorState() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<ActorState>(SKSE::RUNTIME_SSE_1_6_629, this, 0xB8, 0xC0);
-		}
-
-		[[nodiscard]] inline BSTEventSink<BSTransformDeltaEvent>* AsBSTransformDeltaEventSink() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<BSTEventSink<BSTransformDeltaEvent>>(SKSE::RUNTIME_SSE_1_6_629, this, 0xC8, 0xD0);
-		}
-
-		[[nodiscard]] inline const BSTEventSink<BSTransformDeltaEvent>* AsBSTransformDeltaEventSink() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<BSTEventSink<BSTransformDeltaEvent>>(SKSE::RUNTIME_SSE_1_6_629, this, 0xC8, 0xD0);
-		}
-
-		[[nodiscard]] inline BSTEventSink<bhkCharacterMoveFinishEvent>* AsCharacterMoveFinishEventSink() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<BSTEventSink<bhkCharacterMoveFinishEvent>>(SKSE::RUNTIME_SSE_1_6_629, this, 0xD0, 0xD8);
-		}
-
-		[[nodiscard]] inline const BSTEventSink<bhkCharacterMoveFinishEvent>* AsCharacterMoveFinishEventSink() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<BSTEventSink<bhkCharacterMoveFinishEvent>>(SKSE::RUNTIME_SSE_1_6_629, this, 0xD0, 0xD8);
-		}
-
-		[[nodiscard]] inline IPostAnimationChannelUpdateFunctor* AsIPostAnimationChannelUpdateFunctor() noexcept
-		{
-			return &REL::RelocateMemberIfNewer<IPostAnimationChannelUpdateFunctor>(SKSE::RUNTIME_SSE_1_6_629, this, 0xD8, 0xE0);
-		}
-
-		[[nodiscard]] inline const IPostAnimationChannelUpdateFunctor* AsIPostAnimationChannelUpdateFunctor() const noexcept
-		{
-			return &REL::RelocateMemberIfNewer<IPostAnimationChannelUpdateFunctor>(SKSE::RUNTIME_SSE_1_6_629, this, 0xD8, 0xE0);
-		}
-
+		RUNTIME_DATA_ACCESSOR_VERSIONED_EX(ACTOR_RUNTIME_DATA, GetActorRuntimeData, SKSE::RUNTIME_SSE_1_6_629, 0xE0, 0xE8);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(MagicTarget, AsMagicTarget, SKSE::RUNTIME_SSE_1_6_629, 0x98, 0xA0);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(ActorValueOwner, AsActorValueOwner, SKSE::RUNTIME_SSE_1_6_629, 0xB0, 0xB8);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(ActorState, AsActorState, SKSE::RUNTIME_SSE_1_6_629, 0xB8, 0xC0);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(BSTEventSink<BSTransformDeltaEvent>, AsBSTransformDeltaEventSink, SKSE::RUNTIME_SSE_1_6_629, 0xC8, 0xD0);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(BSTEventSink<bhkCharacterMoveFinishEvent>, AsCharacterMoveFinishEventSink, SKSE::RUNTIME_SSE_1_6_629, 0xD0, 0xD8);
+		RUNTIME_CAST_ACCESSOR_VERSIONED(IPostAnimationChannelUpdateFunctor, AsIPostAnimationChannelUpdateFunctor, SKSE::RUNTIME_SSE_1_6_629, 0xD8, 0xE0);
 		// members
 #ifndef ENABLE_SKYRIM_AE
 		RUNTIME_DATA_CONTENT
@@ -818,12 +754,7 @@ namespace RE
 		void        CalculateCurrentVendorFaction() const;
 		float       CalcEquippedWeight();
 		TESFaction* GetCrimeFactionImpl() const;
-		KEEP_FOR_RE()
 	};
-#ifndef ENABLE_SKYRIM_AE
-	static_assert(sizeof(Actor) == 0x2B0);
-#else
-	static_assert(sizeof(Actor) == 0x78);
-#endif
+	STATIC_ASSERT_SIZE(Actor, 0x2B0, 0xD0, 0x2B0, 0xC0);
 }
 #undef RUNTIME_DATA_CONTENT

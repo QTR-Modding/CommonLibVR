@@ -19,8 +19,8 @@ namespace RE
 
 		// members
 		float         nextRepeat;                // 10
-		float         keyRepeatLong;             // 14 - from ini
-		float         keyRepeatShort;            // 18 - from ini
+		float         menuKeyRepeatLong;         // 14
+		float         menuKeyRepeatShort;        // 18
 		std::uint32_t repeatTimer;               // 1C
 		std::uint32_t currentRepeatCount;        // 20
 		std::uint32_t longRepeatThresholdCount;  // 24
@@ -28,8 +28,6 @@ namespace RE
 		bool          unk29;                     // 29
 		std::uint8_t  pad2A;                     // 2A
 		std::uint16_t pad2B;                     // 2B
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(DirectionHandler) == 0x30);
 }

@@ -146,14 +146,8 @@ namespace RE
 		std::uint32_t unk1C8;  // 1C8
 		std::uint32_t unk1CA;  // 1CA
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(UI) == 0x1C8);
-#else
-	static_assert(sizeof(UI) == 0x1D0);
-#endif
+	STATIC_ASSERT_SIZE(UI, 0x1C8, 0x1C8, 0x1D0, 0x1D0);
 
 	template <class T>
 	void UI::AddEventSink(BSTEventSink<T>* a_sink)

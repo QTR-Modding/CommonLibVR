@@ -21,12 +21,6 @@ namespace RE
 		std::uint8_t  pad19;            // 19
 		std::uint16_t pad1A;            // 1A
 		std::uint32_t pad1C;            // 1C
-	private:
-		KEEP_FOR_RE()
 	};
-#if defined(EXCLUSIVE_SKYRIM_FLAT)
-	static_assert(sizeof(TogglePOVHandler) == 0x20);
-#elif defined(EXCLUSIVE_SKYRIM_VR)
-	static_assert(sizeof(TogglePOVHandler) == 0x38);
-#endif
+	STATIC_ASSERT_SIZE(TogglePOVHandler, 0x20, 0x38);
 }

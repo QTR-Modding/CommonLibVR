@@ -1,8 +1,8 @@
 #pragma once
 
 #include "RE/B/BGSDirectionalAmbientLightingColors.h"
+#include "RE/B/BSSimpleList.h"
 #include "RE/B/BSTArray.h"
-#include "RE/B/BSTList.h"
 #include "RE/C/Color.h"
 #include "RE/F/FormTypes.h"
 #include "RE/T/TESForm.h"
@@ -60,7 +60,7 @@ namespace RE
 
 		struct ColorTypes
 		{
-			enum
+			enum ColorType : std::uint32_t
 			{
 				kSkyUpper = 0,
 				kFogNear,
@@ -83,6 +83,7 @@ namespace RE
 				kTotal
 			};
 		};
+		using ColorType = ColorTypes::ColorType;
 
 		struct RecordFlags
 		{
@@ -184,8 +185,6 @@ namespace RE
 		BGSVolumetricLighting*              volumetricLighting[ColorTime::kTotal];                // 8A8 - HNAM
 		BGSShaderParticleGeometryData*      precipitationData;                                    // 8C8 - MNAM
 		BGSReferenceEffect*                 referenceEffect;                                      // 8D0 - NNAM
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(TESWeather) == 0x8D8);
 }

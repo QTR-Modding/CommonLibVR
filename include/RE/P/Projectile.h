@@ -4,8 +4,8 @@
 #include "RE/B/BSAtomic.h"
 #include "RE/B/BSPointerHandle.h"
 #include "RE/B/BSResourceHandle.h"
+#include "RE/B/BSSimpleList.h"
 #include "RE/B/BSSoundHandle.h"
-#include "RE/B/BSTList.h"
 #include "RE/B/BSTSingleton.h"
 #include "RE/C/CollisionLayers.h"
 #include "RE/F/FormTypes.h"
@@ -14,6 +14,7 @@
 #include "RE/N/NiSmartPointer.h"
 #include "RE/N/NiTransform.h"
 #include "RE/T/TESObjectREFR.h"
+#include "REL/RuntimeDataAccessors.h"
 
 namespace RE
 {
@@ -289,22 +290,13 @@ namespace RE
 			PROJECTILE_RUNTIME_DATA_CONTENT
 		};
 
-		[[nodiscard]] inline PROJECTILE_RUNTIME_DATA& GetProjectileRuntimeData() noexcept
-		{
-			return REL::RelocateMemberIfNewer<PROJECTILE_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
-		}
+		void Kill();
 
-		[[nodiscard]] inline const PROJECTILE_RUNTIME_DATA& GetProjectileRuntimeData() const noexcept
-		{
-			return REL::RelocateMemberIfNewer<PROJECTILE_RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
-		}
-
+		RUNTIME_DATA_ACCESSOR_VERSIONED_EX(PROJECTILE_RUNTIME_DATA, GetProjectileRuntimeData, SKSE::RUNTIME_SSE_1_6_629, 0x98, 0xA0);
 		// members
 #ifndef ENABLE_SKYRIM_AE
 		PROJECTILE_RUNTIME_DATA_CONTENT;
 #endif
-	private:
-		KEEP_FOR_RE()
 	};
 #ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(Projectile) == 0x1D8);

@@ -10,6 +10,7 @@
 #include "RE/B/BSThread.h"
 #include "RE/R/RaceSexMenuEvent.h"
 #include "RE/R/Request.h"
+#include "REL/RuntimeDataAccessors.h"
 #include <SKSE/Version.h>
 
 namespace RE
@@ -59,8 +60,6 @@ namespace RE
 		std::uint32_t                         characterID;         // 6C
 		REX::EnumSet<SaveType, std::uint32_t> saveType;            // 70
 		std::uint32_t                         pad74;               // 74
-	private:
-		KEEP_FOR_RE()
 	};
 	static_assert(sizeof(BGSSaveLoadFileEntry) == 0x78);
 
@@ -82,8 +81,8 @@ namespace RE
 
 			~Thread() override;  // 00
 
-			void Unk_01(void) override;  // 01
-			void Unk_02(void) override;  // 02
+			std::uint32_t ThreadProc() override;  // 01
+			void          Unk_02(void) override;  // 02
 
 			// members
 			bool                                                                    isRunnning;                   // 50
@@ -152,16 +151,7 @@ namespace RE
 		};
 		static_assert(offsetof(AE_RUNTIME_DATA, thread) == 0x48);
 
-		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_1130, this, 0x2b0, 0x2f8);
-		}
-
-		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
-		{
-			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_1130, this, 0x2b0, 0x2f8);
-		}
-
+		RUNTIME_DATA_ACCESSOR_VERSIONED(RUNTIME_DATA, SKSE::RUNTIME_SSE_1_6_1130, 0x2b0, 0x2f8);
 		[[nodiscard]] inline AE_RUNTIME_DATA* GetAERuntimeData() noexcept
 		{
 			if SKYRIM_REL_CONSTEXPR (REL::Module::IsAE()) {
@@ -247,9 +237,6 @@ namespace RE
 	protected:
 		bool Save_Impl(std::int32_t a_deviceID, std::uint32_t a_outputStats, const char* a_fileName);
 		bool Load_Impl(const char* a_fileName, std::int32_t a_deviceID, std::uint32_t a_outputStats, bool a_checkForMods);
-
-	private:
-		KEEP_FOR_RE()
 	};
 #if defined(EXCLUSIVE_SKYRIM_FLAT)
 #	if defined(EXCLUSIVE_SKYRIM_AE)
